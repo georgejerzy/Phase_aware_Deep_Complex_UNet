@@ -21,7 +21,7 @@ from tensorflow.keras.activations import *
 from tensorflow.keras.initializers import *
 from tensorflow.python.client import device_lib
 
-from complex_layers.stft import *
+from complex_layers.STFT import *
 from complex_layers.networks import *
 from complex_layers.activations import *
 from complex_layers.normalization import *

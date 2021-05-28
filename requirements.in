@@ -1,0 +1,17 @@
+pandas
+numpy
+jupyter
+scikit-learn
+torch
+tensorflow
+SpeechRecognition
+pocketsphinx
+librosa
+matplotlib
+plotly
+pydub
+google-cloud-speech
+seaborn
+scipy
+natsort
+tqdm
