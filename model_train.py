@@ -62,7 +62,9 @@ def model_flow (model, total_epochs, train_generator, test_generator):
             os.makedirs(model_save_path)
 
       logs_path = './training_logs/' + run_time_str + "/"
-      tb_callback = tf.keras.callbacks.TensorBoard(logs_path)
+
+      file_writer = tf.summary.create_file_writer(logs_path + "metrics")
+      file_writer.set_as_default()
 
       optimizer = tf.keras.optimizers.Adam(beta_1=0.9)
       learning_rate = 0.002
@@ -85,14 +87,19 @@ def model_flow (model, total_epochs, train_generator, test_generator):
                   loss  = loop_test (model, test_noisy_speech, test_clean_speech)
                   test_batch_losses  = test_batch_losses + loss
 
+
+
             'Calculate loss per batch data'
             train_loss = train_batch_losses / train_step
             test_loss  = test_batch_losses / test_step
 
+            tf.summary.scalar('train_loss', train_loss.numpy(), epoch)
+            tf.summary.scalar('val_loss', test_loss.numpy(), epoch)
+            tf.summary.scalar('learning_rate', learning_rate, epoch)
+
             templet = "Epoch : {:3d},     TRAIN LOSS : {:.5f},     TEST LOSS  :  {:.5f}, LEARNING RATE : {:.5f}"
             print(templet.format(epoch+1, train_loss.numpy(), test_loss.numpy(), learning_rate))
 
-            tb_callback.set_model(model)
 
             if ((epoch+1) % 10) == 0:
                   model.save_weights(model_save_path + save_file_name + str(epoch+1) + ".h5")
