@@ -7,6 +7,7 @@ from model_module import *
 from complex_layers.STFT import *
 from complex_layers.networks import *
 from complex_layers.activations import *
+import datetime
 
 'PRINT SYSTEM INFORMATION'
 print("GPU AVAILABLE", tf.config.list_physical_devices('GPU'))
@@ -55,10 +56,24 @@ def model_flow (model, total_epochs, train_generator, test_generator):
       test_step  = len(os.listdir(test_noisy_path)) // batch_size
       print("TRAIN STEPS, TEST STEPS   ", train_step, test_step)
 
+      run_time_str = datetime.datetime.today().strftime('%Y%m%dT%H%M%S')
+      model_save_path = './model_save/' + run_time_str + "/"
+      if not os.path.exists(model_save_path):
+            os.makedirs(model_save_path)
+
+      logs_path = './training_logs/' + run_time_str + "/"
+      tb_callback = tf.keras.callbacks.TensorBoard(logs_path)
+
+      optimizer = tf.keras.optimizers.Adam(beta_1=0.9)
+      learning_rate = 0.002
+
       for epoch in tqdm(range (total_epochs)):
+
+            learning_rate = learning_rate_scheduler(epoch, learning_rate)
+            optimizer.lr.assign(learning_rate)
+
             train_batch_losses = 0
             test_batch_losses  = 0
-            optimizer          = tf.keras.optimizers.Adam(learning_rate = learning_rate_scheduler(epoch, learning_rate), beta_1 = 0.9)
 
             'Training Loop'
             for index, (train_noisy_speech, train_clean_speech) in tqdm(enumerate(train_generator)):
@@ -74,11 +89,13 @@ def model_flow (model, total_epochs, train_generator, test_generator):
             train_loss = train_batch_losses / train_step
             test_loss  = test_batch_losses / test_step
 
-            templet = "Epoch : {:3d},     TRAIN LOSS : {:.5f},     TEST LOSS  :  {:.5f}"
-            print(templet.format(epoch+1, train_loss.numpy(), test_loss.numpy()))
+            templet = "Epoch : {:3d},     TRAIN LOSS : {:.5f},     TEST LOSS  :  {:.5f}, LEARNING RATE : {:3f}"
+            print(templet.format(epoch+1, train_loss.numpy(), test_loss.numpy(), learning_rate))
 
-            if ((epoch+1) % 10) == 0: 
-                  model.save_weights("./model_save/" + save_file_name + str(epoch+1) + ".h5")
+            tb_callback.set_model(model)
+
+            if ((epoch+1) % 10) == 0:
+                  model.save_weights(model_save_path + save_file_name + str(epoch+1) + ".h5")
 
 
 
@@ -88,9 +105,9 @@ if __name__ == "__main__":
       parser.add_argument("--model", type = str, default = "naive_dcunet20", help = "model type")
       parser.add_argument("--epoch", type = int, default = 200,        help = "Input epochs")
       parser.add_argument("--batch", type = int, default = 64,         help = "Input batch size")
-      parser.add_argument("--loss",  type = str, default = "wSDR",     help = "Input Loss function")
-      parser.add_argument("--optim", type = str, default = "adam",     help = "Input optimizer option")
-      parser.add_argument("--lr",    type = float, default = 0.002,    help = "Inputs learning rate")
+      parser.add_argument("--loss",  type = str, default = "wSDR",     help = "Input Loss function") # parameter not propagated?
+      parser.add_argument("--optim", type = str, default = "adam",     help = "Input optimizer option") # parameter not propagated?
+      parser.add_argument("--lr",    type = float, default = 0.002,    help = "Inputs learning rate") # parameter not propagated?
       parser.add_argument("--trn",   type = str, default = "./datasets/train_noisy/", help = "training noisy")
       parser.add_argument("--trc",   type = str, default = "./datasets/train_clean/", help = "training clean")
       parser.add_argument("--ten",   type = str, default = "./datasets/test_noisy/",  help = "testing noisy")
@@ -129,6 +146,9 @@ if __name__ == "__main__":
             model = DCUnet16().model()
       elif model_type == "dcunet20":
             model = DCUnet20().model()
-      
+
       model.summary()
       model_flow (model, total_epochs, train_generator, test_generator)
+
+
+      # todo: https://pgaleone.eu/tensorflow/tf.function/2019/03/21/dissecting-tf-function-part-1/
