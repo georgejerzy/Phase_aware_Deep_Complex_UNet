@@ -42,10 +42,10 @@ def loop_test (model, test_noisy_speech, test_clean_speech):
 
       return test_loss
 
-def learning_rate_scheduler (epoch, learning_rate):
-      if (epoch+1) <= int(0.5*epoch):
+def learning_rate_scheduler (epoch, learning_rate, total_epochs):
+      if (epoch+1) <= int(0.5*total_epochs):
             return 1.00 * learning_rate
-      elif (epoch+1) > int(0.5*epoch) and (epoch+1) <= int(0.75*epoch):
+      elif (epoch+1) > int(0.5*total_epochs) and (epoch+1) <= int(0.75*total_epochs):
             return 0.20 * learning_rate
       else:
             return 0.05 * learning_rate
@@ -69,7 +69,7 @@ def model_flow (model, total_epochs, train_generator, test_generator):
 
       for epoch in tqdm(range (total_epochs)):
 
-            learning_rate = learning_rate_scheduler(epoch, learning_rate)
+            learning_rate = learning_rate_scheduler(epoch, learning_rate, total_epochs)
             optimizer.lr.assign(learning_rate)
 
             train_batch_losses = 0
@@ -89,7 +89,7 @@ def model_flow (model, total_epochs, train_generator, test_generator):
             train_loss = train_batch_losses / train_step
             test_loss  = test_batch_losses / test_step
 
-            templet = "Epoch : {:3d},     TRAIN LOSS : {:.5f},     TEST LOSS  :  {:.5f}, LEARNING RATE : {:3f}"
+            templet = "Epoch : {:3d},     TRAIN LOSS : {:.5f},     TEST LOSS  :  {:.5f}, LEARNING RATE : {:.5f}"
             print(templet.format(epoch+1, train_loss.numpy(), test_loss.numpy(), learning_rate))
 
             tb_callback.set_model(model)
