@@ -30,11 +30,16 @@ def get_file_list (file_path):
 
       return file_list
 
-
+import soundfile as sf
 'INFERENCE DEEP LEARNING MODEL'
 def inference (path_list, save_path):
+      sampling_rate = 16_000
       for index1, speech_file_path in tqdm(enumerate (path_list)):
-            _, unseen_noisy_speech = scipy.io.wavfile.read(speech_file_path)
+            # _, unseen_noisy_speech = scipy.io.wavfile.read(speech_file_path)
+
+            unseen_noisy_speech, sr = sf.read(speech_file_path, dtype="float32")
+            assert sr == sampling_rate
+
             restore = []
             
             for index2 in range (int(len(unseen_noisy_speech) / speech_length)):
@@ -44,7 +49,11 @@ def inference (path_list, save_path):
                   predict = np.reshape(enhancement_speech, (speech_length, 1))
                   restore.extend(predict)
             restore = np.array(restore)
-            scipy.io.wavfile.write("./model_pred/" + "{:04d}".format(index1+1) + ".wav", rate = sampling_rate, data = restore)
+
+            sf.write("./model_pred/" + "{:04d}".format(index1+1) + ".wav", restore, sampling_rate, subtype='FLOAT')
+
+
+            # scipy.io.wavfile.write("./model_pred/" + "{:04d}".format(index1+1) + ".wav", rate = sampling_rate, data = restore)
 
 
 
@@ -81,3 +90,6 @@ if __name__ == "__main__":
       'INFERENCE'
       inference(path_list = noisy_file_list, save_path = pred_data_path)
       print("__END__")
+
+      # example call:
+      # python3.8 model_test.py --model naive_dcunet16 --load ./model_save/20210530T173510/dcunet200.h5 --data ./datasets_full/fn/small_noisy_set/
