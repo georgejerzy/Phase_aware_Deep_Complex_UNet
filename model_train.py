@@ -43,6 +43,8 @@ def loop_test (model, test_noisy_speech, test_clean_speech):
       return test_loss
 
 def learning_rate_scheduler (epoch, learning_rate, total_epochs):
+      #that should be replaced by something more sophisticated - based on criterion on val loss, not the number of epochs
+      # f.e. torch.optim.lr_scheduler.ReduceLROnPlateau
       if (epoch+1) <= int(0.5*total_epochs):
             return 1.00 * learning_rate
       elif (epoch+1) > int(0.5*total_epochs) and (epoch+1) <= int(0.75*total_epochs):
@@ -68,6 +70,9 @@ def model_flow (model, total_epochs, train_generator, test_generator):
 
       optimizer = tf.keras.optimizers.Adam(beta_1=0.9)
       learning_rate = 0.002
+      # a bit high - let's try 10^-3, 10^-4, 10^-5
+      # fix scheduler
+      # also try AdamW (with L2)
 
       for epoch in tqdm(range (total_epochs)):
 

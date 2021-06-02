@@ -165,6 +165,8 @@ class DCUnet20 ():
         deconv_real1, deconv_imag1 = convariance_decoder_module(deconv_real1, deconv_imag1, conv_real2, conv_imag2, 32, (1, 7), (1, 1), training = self.norm_trainig)
         deconv_real1, deconv_imag1 = convariance_decoder_module(deconv_real1, deconv_imag1, conv_real1, conv_imag1, 1, (7, 1), (1, 1), training = self.norm_trainig)
 
+        # todo: add dropout layer on deconv_real1, deconv_imag1
+
         enhancement_stft_real, enhancement_stft_imag = mask_processing(deconv_real1, deconv_imag1, stft_real, stft_imag)
         enhancement_stft_real, enhancement_stft_imag = transpoed_ISTFT(enhancement_stft_real, enhancement_stft_imag)
 
